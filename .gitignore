@@ -13,6 +13,6 @@ logs/
 # PDF and data
 *.pdf
 
-client/
+
 
 .env
