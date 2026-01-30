@@ -9,6 +9,9 @@ import fileRoutes from './routes/fileRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import issuesRoutes from './routes/issuesRoutes.js';
 import queryRoutes from './routes/queryRoutes.js';
+import adminVerificationRoutes from './routes/adminVerificationRoutes.js';
+import interactionRoutes from './routes/interactionRoutes.js';
+import knowledgeGapRoutes from './routes/knowledgeGapRoutes.js';
 
 import cors from 'cors';
 
@@ -16,6 +19,9 @@ import { chatting } from './controllers/chatController.js'; //GEmini wallah
 
 import TelegramBot from "node-telegram-bot-api";
 import axios from "axios";
+
+// Python server URL for agent-based processing
+const PYTHON_SERVER_URL = process.env.PYTHON_SERVER_URL || 'http://localhost:8001';
 
 dotenv.config();
 
@@ -50,6 +56,15 @@ app.use('/api/issues', issuesRoutes);
 // Query log routes (Admin only)
 app.use('/api/admin/queries', queryRoutes);
 
+// Admin verification routes (Document verification, approvals)
+app.use('/api/admin', adminVerificationRoutes);
+
+// CRM Interaction routes (Interaction tracking)
+app.use('/api/interactions', interactionRoutes);
+
+// Knowledge Gap routes (Admin only - unanswered questions)
+app.use('/api/admin/knowledge-gaps', knowledgeGapRoutes);
+
 // Serve chatbot demo page
 app.get('/demo', (req, res) => {
   res.sendFile(path.join(__dirname, 'client-old', 'public', 'chatbot-demo.html'));
@@ -57,16 +72,77 @@ app.get('/demo', (req, res) => {
 
 
 
-// Chat route (preserved) - Enhanced with query logging and session management
+// Chat route - Now forwards to Python FastAPI server with ArmorIQ integration
 app.post('/chat', async (req, res) => {
-  const { question, userId, sessionId } = req.body; // sessionId for maintaining conversation context
+  const { question, userId, sessionId, userContext } = req.body;
+  
   if (!question) {
     return res.status(400).json({ error: 'Question is required' });
   }
+  
   try {
-    const result = await chatting(question, userId, sessionId);
-    res.json(result); // Returns { answer, sessionId }
+    // Forward request to Python server
+    const response = await axios.post(`${PYTHON_SERVER_URL}/chat`, {
+      question,
+      userId,
+      sessionId,
+      userContext
+    });
+    
+    res.json(response.data);
   } catch (err) {
+    console.error('Error forwarding to Python server:', err.message);
+    
+    // Fallback to Node.js chatbot if Python server is down
+    try {
+      const result = await chatting(question, userId, sessionId);
+      res.json({ ...result, fallback: true });
+    } catch (fallbackErr) {
+      res.status(500).json({ error: fallbackErr.message });
+    }
+  }
+});
+
+// Scholarship agent endpoint - forwards to Python
+app.post('/agent/scholarship', async (req, res) => {
+  try {
+    const response = await axios.post(`${PYTHON_SERVER_URL}/agent/scholarship`, req.body);
+    res.json(response.data);
+  } catch (err) {
+    console.error('Error in scholarship agent:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admission agent endpoint - forwards to Python
+app.post('/agent/admission', async (req, res) => {
+  try {
+    const response = await axios.post(`${PYTHON_SERVER_URL}/agent/admission`, req.body);
+    res.json(response.data);
+  } catch (err) {
+    console.error('Error in admission agent:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// MCP execution endpoint - forwards to Python
+app.post('/mcp/execute', async (req, res) => {
+  try {
+    const response = await axios.post(`${PYTHON_SERVER_URL}/mcp/execute`, req.body);
+    res.json(response.data);
+  } catch (err) {
+    console.error('Error executing MCP:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get MCP registry
+app.get('/mcp/registry', async (req, res) => {
+  try {
+    const response = await axios.get(`${PYTHON_SERVER_URL}/mcp/registry`);
+    res.json(response.data);
+  } catch (err) {
+    console.error('Error getting MCP registry:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

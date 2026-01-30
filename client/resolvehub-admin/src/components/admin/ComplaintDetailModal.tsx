@@ -21,6 +21,7 @@ export interface ComplaintDetail {
   createdAt: string;
   location?: string;
   reportedBy?: string;
+  imageUrl?: string;
 }
 
 interface ComplaintDetailModalProps {
@@ -68,9 +69,19 @@ export function ComplaintDetailModal({
         
         {/* Content */}
         <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          {complaint.imageUrl && (
+            <div className="rounded-lg overflow-hidden bg-muted border border-border">
+              <img
+                src={complaint.imageUrl}
+                alt={complaint.title}
+                className="w-full h-96 object-cover"
+              />
+            </div>
+          )}
+          
           <div>
-            <h3 className="text-base font-medium text-foreground">{complaint.title}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">{complaint.description}</p>
+            <h3 className="text-base font-medium text-foreground mb-1">{complaint.title}</h3>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">{complaint.description}</p>
           </div>
           
           {/* Upvotes highlight */}

@@ -24,9 +24,9 @@ const Login = () => {
       const response = await authAPI.login(email, password);
       const { token, user } = response.data;
 
-      // Check if user is admin
+      // Check if user is admin/authority
       if (user.role !== 'admin') {
-        toast.error('Access denied. Admin credentials required.');
+        toast.error('Access denied. Authority credentials required.');
         setLoading(false);
         return;
       }
@@ -53,9 +53,9 @@ const Login = () => {
               <Shield className="h-8 w-8 text-blue-600" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          <CardTitle className="text-2xl font-bold">Authorities Login</CardTitle>
           <CardDescription>
-            Enter your admin credentials to access the dashboard
+            Enter your credentials to access the authorities dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,12 +99,7 @@ const Login = () => {
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Default Admin Credentials:</p>
-            <p className="font-mono text-xs mt-1">
-              admin@jssaten.ac.in / admin123
-            </p>
-          </div>
+          
         </CardContent>
       </Card>
     </div>

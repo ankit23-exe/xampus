@@ -66,3 +66,23 @@ export const adminOnly = [authenticate, authorize('admin')];
 
 // Middleware for both students and admins (any authenticated user)
 export const authenticated = authenticate;
+
+// Alias for authenticate (used in some routes)
+export const verifyToken = authenticate;
+
+// Simple admin check middleware
+export const isAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      error: 'Authentication required.' 
+    });
+  }
+  
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ 
+      error: 'Access denied. Admin role required.' 
+    });
+  }
+  
+  next();
+};

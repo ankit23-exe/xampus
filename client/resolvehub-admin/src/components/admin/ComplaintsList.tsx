@@ -16,6 +16,7 @@ export interface Complaint {
   status: 'pending' | 'in_progress' | 'resolved';
   upvotes: number;
   createdAt: string;
+  imageUrl?: string;
 }
 
 interface ComplaintsListProps {
@@ -94,9 +95,18 @@ export function ComplaintsList({ complaints, onView, onUpdateStatus }: Complaint
             key={complaint.id}
             className="group flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border bg-card p-4 transition-all hover:border-accent/30 hover:shadow-sm"
           >
+            {complaint.imageUrl && (
+              <div className="flex-shrink-0 w-full sm:w-24 h-24 rounded-lg overflow-hidden bg-muted border border-border">
+                <img
+                  src={complaint.imageUrl}
+                  alt={complaint.title}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform"
+                />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-2 mb-2">
-                <h4 className="text-sm font-medium text-foreground">{complaint.title}</h4>
+                <h4 className="text-sm font-semibold text-foreground line-clamp-2 break-words">{complaint.title}</h4>
               </div>
               
               <div className="flex flex-wrap items-center gap-2 text-xs">

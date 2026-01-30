@@ -38,6 +38,7 @@ export default function CampusComplaints() {
         status: statusMap[issue.status] || 'pending',
         upvotes: issue.upvoteCount,
         createdAt: new Date(issue.createdAt).toISOString().split('T')[0],
+        imageUrl: issue.imageUrl,
       }));
 
       setComplaints(mappedComplaints);

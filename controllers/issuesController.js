@@ -2,10 +2,10 @@ import Complaint from '../models/Complaint.js';
 
 // @desc    Create a new complaint/issue
 // @route   POST /api/issues
-// @access  Private (Student only)
+// @access  Public (can be called from Python server or authenticated users)
 export const createIssue = async (req, res) => {
   try {
-    const { title, description, imageUrl, category } = req.body;
+    const { title, description, imageUrl, category, userId } = req.body;
 
     // Validate input
     if (!title || !description) {
@@ -14,19 +14,28 @@ export const createIssue = async (req, res) => {
       });
     }
 
+    // Get userId from either auth context or request body
+    const creatorId = req.user?._id || userId || null;
+
     // Create new complaint
     const complaint = new Complaint({
       title,
       description,
       imageUrl,
       category: category || 'other',
-      createdBy: req.user._id
+      createdBy: creatorId
     });
 
     await complaint.save();
 
-    // Populate creator details
-    await complaint.populate('createdBy', 'name email');
+    // Populate creator details if exists
+    if (creatorId) {
+      try {
+        await complaint.populate('createdBy', 'name email');
+      } catch (e) {
+        // If populate fails, just continue
+      }
+    }
 
     res.status(201).json({
       message: 'Issue created successfully',
@@ -35,9 +44,11 @@ export const createIssue = async (req, res) => {
   } catch (error) {
     console.error('Create issue error:', error);
     res.status(500).json({ 
-      error: 'Failed to create issue. Please try again.' 
+      error: 'Failed to create issue. Please try again.',
+      details: error.message
     });
   }
+
 };
 
 // @desc    Get all issues (for students - read-only)

@@ -68,7 +68,7 @@ export default function StudentSignup() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
           <CardDescription className="text-center">
-            Sign up to access the student portal
+            Sign up to access the user portal
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -99,7 +99,7 @@ export default function StudentSignup() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="student@jssaten.ac.in"
+                placeholder="user-email"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -146,7 +146,7 @@ export default function StudentSignup() {
             
             <p className="text-sm text-center text-muted-foreground">
               Already have an account?{' '}
-              <Link to="/student/login" className="text-primary hover:underline font-medium">
+              <Link to="/user/login" className="text-primary hover:underline font-medium">
                 Login
               </Link>
             </p>

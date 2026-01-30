@@ -4,24 +4,26 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User } from 'lucide-react';
+import { Send, Loader2, Bot, User, ImagePlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8001';
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  imageUrl?: string;
 }
 
 export default function StudentChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your campus assistant. Ask me anything about the campus facilities, academics, or any issues you\'re facing.',
+      text: 'Hello! I\'m your campus assistant. Ask me anything about the campus facilities, academics, or any issues you\'re facing. You can also attach images when reporting issues!',
       sender: 'bot',
       timestamp: new Date()
     }
@@ -29,7 +31,10 @@ export default function StudentChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -39,12 +44,34 @@ export default function StudentChat() {
   }, [messages]);
 
   useEffect(() => {
-    // Load session from localStorage
-    const savedSessionId = localStorage.getItem('chat_session_id');
-    const savedMessages = localStorage.getItem('chat_messages');
+    // Load session from localStorage with user isolation
+    // This runs whenever token changes (user logs in/out)
+    const token = localStorage.getItem('student_token');
+    
+    // If no token, reset to initial greeting
+    if (!token) {
+      setMessages([
+        {
+          id: '1',
+          text: 'Hello! I\'m your campus assistant. Ask me anything about the campus facilities, academics, or any issues you\'re facing. You can also attach images when reporting issues!',
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
+      setSessionId(null);
+      return;
+    }
+    
+    const userKey = `chat_session_id_${token.substring(0, 20)}`;
+    const messagesKey = `chat_messages_${token.substring(0, 20)}`;
+    
+    const savedSessionId = localStorage.getItem(userKey);
+    const savedMessages = localStorage.getItem(messagesKey);
     
     if (savedSessionId) {
       setSessionId(savedSessionId);
+    } else {
+      setSessionId(null);
     }
     
     if (savedMessages) {
@@ -56,41 +83,101 @@ export default function StudentChat() {
         })));
       } catch (error) {
         console.error('Error loading messages:', error);
+        // If error, reset to initial greeting
+        setMessages([
+          {
+            id: '1',
+            text: 'Hello! I\'m your campus assistant. Ask me anything about the campus facilities, academics, or any issues you\'re facing. You can also attach images when reporting issues!',
+            sender: 'bot',
+            timestamp: new Date()
+          }
+        ]);
       }
+    } else {
+      // No saved messages for this user, show greeting
+      setMessages([
+        {
+          id: '1',
+          text: 'Hello! I\'m your campus assistant. Ask me anything about the campus facilities, academics, or any issues you\'re facing. You can also attach images when reporting issues!',
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
     }
   }, []);
 
   useEffect(() => {
-    // Save messages to localStorage
+    // Save messages to localStorage with user isolation
     if (messages.length > 1) {
-      localStorage.setItem('chat_messages', JSON.stringify(messages));
+      const token = localStorage.getItem('student_token');
+      const messagesKey = token ? `chat_messages_${token.substring(0, 20)}` : 'chat_messages';
+      localStorage.setItem(messagesKey, JSON.stringify(messages));
     }
   }, [messages]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && !selectedImage) || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       text: input,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      imageUrl: imagePreview || undefined
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageText = input;
     setInput('');
+    const imageToSend = selectedImage;
+    removeImage();
     setLoading(true);
 
     try {
       const token = localStorage.getItem('student_token');
+      
+      // Always use Python API for chat (supports both text and images)
+      const formData = new FormData();
+      formData.append('question', messageText);
+      if (imageToSend) {
+        formData.append('image', imageToSend);
+      }
+      if (sessionId) {
+        formData.append('sessionId', sessionId);
+      }
+
       const response = await axios.post(
-        `${API_URL}/chat`,
+        `${PYTHON_API_URL}/chat`,
+        formData,
         {
-          question: input,
-          sessionId: sessionId
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
 
@@ -101,10 +188,10 @@ export default function StudentChat() {
         timestamp: new Date()
       };
 
-      // Save session ID
       if (response.data.sessionId) {
         setSessionId(response.data.sessionId);
-        localStorage.setItem('chat_session_id', response.data.sessionId);
+        const userKey = token ? `chat_session_id_${token.substring(0, 20)}` : 'chat_session_id';
+        localStorage.setItem(userKey, response.data.sessionId);
       }
 
       setMessages(prev => [...prev, botMessage]);
@@ -160,9 +247,9 @@ export default function StudentChat() {
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 overflow-hidden p-0">
-        <ScrollArea className="h-full p-4">
-          <div className="space-y-4">
+      <CardContent className="flex-1 overflow-hidden p-0 flex flex-col">
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-4" ref={scrollRef}>
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -185,6 +272,13 @@ export default function StudentChat() {
                         : 'bg-muted'
                     }`}
                   >
+                    {message.imageUrl && (
+                      <img 
+                        src={message.imageUrl} 
+                        alt="Uploaded" 
+                        className="max-w-xs rounded mb-2"
+                      />
+                    )}
                     <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                   </div>
                   <span className="text-xs text-muted-foreground">
@@ -205,13 +299,44 @@ export default function StudentChat() {
                 </div>
               </div>
             )}
-            <div ref={scrollRef} />
           </div>
         </ScrollArea>
       </CardContent>
-
-      <CardFooter className="border-t p-4">
+      <CardFooter className="border-t flex flex-col gap-2">
+        {imagePreview && (
+          <div className="relative inline-block w-full">
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="max-h-24 rounded border"
+            />
+            <Button
+              size="icon"
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-6 w-6"
+              onClick={removeImage}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
         <div className="flex gap-2 w-full">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading}
+            title="Attach image"
+          >
+            <ImagePlus className="h-4 w-4" />
+          </Button>
           <Input
             placeholder="Type your message..."
             value={input}
@@ -220,7 +345,7 @@ export default function StudentChat() {
             disabled={loading}
             className="flex-1"
           />
-          <Button onClick={handleSend} disabled={loading || !input.trim()}>
+          <Button onClick={handleSend} disabled={loading || (!input.trim() && !selectedImage)}>
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

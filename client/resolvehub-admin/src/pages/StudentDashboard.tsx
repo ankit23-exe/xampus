@@ -20,22 +20,31 @@ export default function StudentDashboard() {
     const userData = localStorage.getItem('student_user');
 
     if (!token || !userData) {
-      navigate('/student/login');
+      navigate('/user/login');
       return;
+
     }
 
     try {
       setUser(JSON.parse(userData));
     } catch (error) {
       console.error('Error parsing user data:', error);
-      navigate('/student/login');
+      navigate('/user/login');
     }
   }, [navigate]);
 
   const handleLogout = () => {
+    // Get the current token to clear user-specific chat data
+    const token = localStorage.getItem('student_token');
+    if (token) {
+      const userKey = `chat_session_id_${token.substring(0, 20)}`;
+      const messagesKey = `chat_messages_${token.substring(0, 20)}`;
+      localStorage.removeItem(userKey);
+      localStorage.removeItem(messagesKey);
+    }
     localStorage.removeItem('student_token');
     localStorage.removeItem('student_user');
-    navigate('/student/login');
+    navigate('/user/login');
   };
 
   if (!user) {
@@ -49,7 +58,7 @@ export default function StudentDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
+              <h1 className="text-2xl font-bold text-gray-900">User Portal</h1>
               <p className="text-sm text-gray-600">Welcome, {user.name}</p>
             </div>
             <Button variant="outline" onClick={handleLogout}>

@@ -40,7 +40,7 @@ export default function StudentLogin() {
       localStorage.setItem('student_user', JSON.stringify(response.data.user));
       
       // Redirect to student dashboard
-      navigate('/student/dashboard');
+      navigate('/user/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
@@ -52,9 +52,9 @@ export default function StudentLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Student Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">User Login</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access the student portal
+            Enter your credentials to access the user portal
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -71,7 +71,7 @@ export default function StudentLogin() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="student@jssaten.ac.in"
+                placeholder="user@jssaten.ac.in"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -102,7 +102,7 @@ export default function StudentLogin() {
             
             <p className="text-sm text-center text-muted-foreground">
               Don't have an account?{' '}
-              <Link to="/student/signup" className="text-primary hover:underline font-medium">
+              <Link to="/user/signup" className="text-primary hover:underline font-medium">
                 Sign up
               </Link>
             </p>

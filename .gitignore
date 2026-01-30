@@ -13,6 +13,17 @@ logs/
 # PDF and data
 *.pdf
 
-
-
+# Environment files
 .env
+python-server/.env
+
+# Python
+python-server/venv/
+python-server/__pycache__/
+python-server/**/__pycache__/
+python-server/**/*.pyc
+python-server/**/*.pyo
+python-server/**/*.pyd
+.Python
+*.py[cod]
+*$py.class

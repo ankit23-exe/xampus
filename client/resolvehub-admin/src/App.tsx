@@ -39,10 +39,10 @@ const App = () => (
             </Route>
 
             {/* Student Routes */}
-            <Route path="/student/login" element={<StudentLogin />} />
-            <Route path="/student/signup" element={<StudentSignup />} />
+            <Route path="/user/login" element={<StudentLogin />} />
+            <Route path="/user/signup" element={<StudentSignup />} />
             <Route
-              path="/student/dashboard"
+              path="/user/dashboard"
               element={
                 <StudentProtectedRoute>
                   <StudentDashboard />

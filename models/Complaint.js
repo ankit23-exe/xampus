@@ -25,7 +25,8 @@ const complaintSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false,  // Allow null for anonymous complaints
+    default: null
   },
   status: {
     type: String,
