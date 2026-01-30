@@ -6,18 +6,19 @@ import { normalizeQuery, findSimilarQuery } from '../services/queryService.js';
 // @access  Internal
 export async function logUnansweredQuery(originalQuestion, userId) {
   try {
-    // Normalize the question for admin-friendly view
-    const normalizedQuestion = await normalizeQuery(originalQuestion);
-
-    // Find existing unanswered queries
+    // Find existing unanswered queries FIRST to pass to normalizer
     const existingQueries = await QueryLog.find({ answered: false });
 
+    // Normalize the question for admin-friendly view (with context of existing questions)
+    const normalizedQuestion = await normalizeQuery(originalQuestion, existingQueries);
+
     // Check if similar query exists
-    const similarQuery = findSimilarQuery(normalizedQuestion, existingQueries, 0.7);
+    const similarQuery = findSimilarQuery(normalizedQuestion, existingQueries, 0.6);
 
     if (similarQuery) {
       // Update existing query
-      if (!similarQuery.askedByUsers.includes(userId)) {
+      // Only add userId if it's provided and not already in the array
+      if (userId && !similarQuery.askedByUsers.includes(userId)) {
         similarQuery.askedByUsers.push(userId);
       }
       similarQuery.askCount += 1;
@@ -31,7 +32,7 @@ export async function logUnansweredQuery(originalQuestion, userId) {
 
       await similarQuery.save();
       
-      console.log(`Updated existing query log: ${similarQuery.normalizedQuestion}`);
+      console.log(`✓ Updated existing query: "${similarQuery.normalizedQuestion}" (Count: ${similarQuery.askCount}, Users: ${similarQuery.askedByUsers.length})`);
       return similarQuery;
     } else {
       // Create new query log
@@ -40,7 +41,7 @@ export async function logUnansweredQuery(originalQuestion, userId) {
         normalizedQuestion,
         answered: false,
         answerSource: 'none',
-        askedByUsers: userId ? [userId] : [],
+        askedByUsers: userId ? [userId] : [], // Only add if userId is provided
         askCount: 1,
         originalQuestions: [{
           question: originalQuestion,
@@ -51,7 +52,7 @@ export async function logUnansweredQuery(originalQuestion, userId) {
 
       await newQuery.save();
       
-      console.log(`Created new query log: ${newQuery.normalizedQuestion}`);
+      console.log(`✓ Created new query: "${newQuery.normalizedQuestion}"`);
       return newQuery;
     }
   } catch (error) {

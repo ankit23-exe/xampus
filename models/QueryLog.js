@@ -23,8 +23,8 @@ const queryLogSchema = new mongoose.Schema({
     default: 'none'
   },
   askedByUsers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    type: String, // Changed from ObjectId to String to support any user identifier
+    trim: true
   }],
   askCount: {
     type: Number,

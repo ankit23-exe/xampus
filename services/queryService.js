@@ -37,30 +37,44 @@ export function isUnansweredResponse(responseText) {
 /**
  * Normalize a user question into a simplified, admin-friendly format
  * @param {string} originalQuestion - The original user question
+ * @param {Array} existingQueries - Array of existing normalized questions for context
  * @returns {Promise<string>} - Normalized question for admin review
  */
-export async function normalizeQuery(originalQuestion) {
+export async function normalizeQuery(originalQuestion, existingQueries = []) {
   try {
+    // Build context of existing questions for better consistency
+    const existingQuestionsContext = existingQueries.length > 0
+      ? `\n\nExisting questions in the system (check if the new question is similar to any of these):\n${existingQueries.map((q, i) => `${i + 1}. ${q.normalizedQuestion}`).join('\n')}`
+      : '';
+
     const messages = [
       {
         role: 'system',
         content: `You are a query normalization expert for a college administration system. 
 
-Your task is to convert student queries into clear, concise, admin-friendly questions that capture the core information need.
+Your task is to convert student queries into clear, concise, admin-friendly questions that capture the CORE TOPIC being asked about.
+
+CRITICAL: Focus on the MAIN SUBJECT, not specific details. Multiple variations asking about the same topic should result in the SAME normalized question.
 
 Guidelines:
 1. Remove casual language, filler words, and emotional expressions
-2. Focus on the specific information being requested
-3. Use formal, professional language
-4. Keep the essential context but make it concise
-5. If the query is about notifications, circulars, or notices, specify that clearly
-6. If the query is about procedures, deadlines, or requirements, make that explicit
+2. Remove overly specific details (like year, branch, semester) unless they're the core focus
+3. Focus on the GENERAL TOPIC being asked about (e.g., "scholarship disbursement" not "scholarship disbursement for second-year B.Tech")
+4. Use formal, professional language
+5. Keep it concise and generic enough to match similar questions
+6. If asking about notifications/circulars/notices, specify that clearly
+7. If asking about procedures/deadlines/requirements, make that explicit
 
 Examples:
 - "Hey, when is the exam??? I'm so stressed!" → "When are the examinations scheduled?"
+- "When will scholarship money come for B.Tech second year?" → "When will scholarship disbursement be made?"
+- "mera scholarship ka paisa kab milega?" → "When will scholarship disbursement be made?"
+- "When will the scholarship disbursement for second-year B.Tech students occur?" → "When will scholarship disbursement be made?"
 - "Can someone tell me about the fee payment thing?" → "What is the fee payment procedure?"
-- "I heard there's some notice about hostel stuff, what's that about?" → "What are the current hostel-related notices or updates?"
-- "My friend said there's a new rule for attendance, is it true?" → "What are the current attendance policies or recent changes?"
+- "I heard there's some notice about hostel stuff" → "What are the current hostel-related notices?"
+- "My friend said there's a new rule for attendance" → "What are the current attendance policies?"
+
+IMPORTANT: If the question is very similar to an existing question in the system, use the EXACT same wording as the existing question.${existingQuestionsContext}
 
 Only respond with the normalized question, nothing else.`
       },
@@ -74,7 +88,7 @@ Only respond with the normalized question, nothing else.`
       model: process.env.GPT_MODEL || "gpt-4o-mini",
       messages: messages,
       max_tokens: 150,
-      temperature: 0.3
+      temperature: 0.1 // Lower temperature for more consistent outputs
     });
 
     const normalizedQuestion = response.choices[0].message.content.trim();
@@ -90,13 +104,13 @@ Only respond with the normalized question, nothing else.`
 }
 
 /**
- * Find similar query from existing queries using simple string similarity
+ * Find similar query from existing queries using string similarity and optional LLM verification
  * @param {string} normalizedQuestion - The normalized question to compare
  * @param {Array} existingQueries - Array of existing query objects
  * @param {number} threshold - Similarity threshold (0-1)
  * @returns {Object|null} - Similar query object or null if none found
  */
-export function findSimilarQuery(normalizedQuestion, existingQueries, threshold = 0.7) {
+export function findSimilarQuery(normalizedQuestion, existingQueries, threshold = 0.6) {
   if (!existingQueries || existingQueries.length === 0) {
     return null;
   }

@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import fileRoutes from './routes/fileRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import issuesRoutes from './routes/issuesRoutes.js';
@@ -16,6 +18,9 @@ import TelegramBot from "node-telegram-bot-api";
 import axios from "axios";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -45,17 +50,22 @@ app.use('/api/issues', issuesRoutes);
 // Query log routes (Admin only)
 app.use('/api/admin/queries', queryRoutes);
 
+// Serve chatbot demo page
+app.get('/demo', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client-old', 'public', 'chatbot-demo.html'));
+});
 
 
-// Chat route (preserved) - Enhanced with query logging
+
+// Chat route (preserved) - Enhanced with query logging and session management
 app.post('/chat', async (req, res) => {
-  const { question, userId } = req.body; // userId is optional for unanswered query tracking
+  const { question, userId, sessionId } = req.body; // sessionId for maintaining conversation context
   if (!question) {
     return res.status(400).json({ error: 'Question is required' });
   }
   try {
-    const answer = await chatting(question, userId);
-    res.json({ answer });
+    const result = await chatting(question, userId, sessionId);
+    res.json(result); // Returns { answer, sessionId }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

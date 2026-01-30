@@ -1,0 +1,382 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ResolveHub Admin Dashboard Design System
+   A calm, authoritative, and professional admin interface
+   Designed for daily administrative use with premium feel
+*/
+
+@layer base {
+  :root {
+    /* Core backgrounds */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    /* Cards & surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary - Deep Navy (Authoritative) */
+    --primary: 222 47% 15%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary - Soft Blue-Gray */
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted surfaces */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent - Calm Blue */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* === SEMANTIC ADMIN COLORS === */
+    
+    /* Status Colors */
+    --status-success: 142 71% 45%;
+    --status-success-bg: 142 76% 95%;
+    --status-success-foreground: 142 76% 25%;
+    
+    --status-warning: 38 92% 50%;
+    --status-warning-bg: 38 92% 95%;
+    --status-warning-foreground: 38 92% 30%;
+    
+    --status-error: 0 84% 60%;
+    --status-error-bg: 0 84% 96%;
+    --status-error-foreground: 0 84% 35%;
+    
+    --status-info: 217 91% 60%;
+    --status-info-bg: 217 91% 95%;
+    --status-info-foreground: 217 91% 35%;
+    
+    --status-pending: 32 95% 55%;
+    --status-pending-bg: 32 95% 95%;
+    --status-pending-foreground: 32 95% 30%;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 15%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 22%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 22%;
+    --sidebar-ring: 217 91% 60%;
+    --sidebar-muted: 215 16% 65%;
+
+    /* Metric Cards */
+    --metric-blue: 217 91% 60%;
+    --metric-blue-bg: 217 91% 97%;
+    --metric-green: 142 71% 45%;
+    --metric-green-bg: 142 76% 97%;
+    --metric-amber: 38 92% 50%;
+    --metric-amber-bg: 38 92% 97%;
+    --metric-red: 0 84% 60%;
+    --metric-red-bg: 0 84% 97%;
+    --metric-purple: 262 83% 58%;
+    --metric-purple-bg: 262 83% 97%;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.08), 0 4px 6px -4px hsl(222 47% 11% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.05);
+    --shadow-card-hover: 0 12px 20px -4px hsl(217 91% 60% / 0.12), 0 4px 8px -4px hsl(222 47% 11% / 0.06);
+
+    /* Upload zone */
+    --upload-border: 217 91% 60%;
+    --upload-bg: 217 91% 98%;
+    --upload-hover-bg: 217 91% 96%;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 212 27% 84%;
+
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 217 91% 60%;
+    --sidebar-muted: 215 16% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Metric card styles */
+  .metric-card {
+    @apply relative overflow-hidden rounded-xl border bg-card p-5 transition-all duration-200;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .metric-card::before {
+    content: '';
+    @apply absolute right-0 top-0 h-full w-1/3 opacity-50;
+    background: radial-gradient(circle at 100% 0%, var(--metric-glow, hsl(217 91% 60% / 0.1)) 0%, transparent 70%);
+  }
+
+  /* Status badges */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors;
+  }
+
+  .status-indexed {
+    @apply bg-[hsl(var(--status-success-bg))] text-[hsl(var(--status-success-foreground))];
+  }
+
+  .status-processing {
+    @apply bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-foreground))];
+  }
+
+  .status-attention {
+    @apply bg-[hsl(var(--status-error-bg))] text-[hsl(var(--status-error-foreground))];
+  }
+
+  .status-pending {
+    @apply bg-[hsl(var(--status-warning-bg))] text-[hsl(var(--status-warning-foreground))];
+  }
+
+  .status-resolved {
+    @apply bg-[hsl(var(--status-success-bg))] text-[hsl(var(--status-success-foreground))];
+  }
+
+  .status-in-progress {
+    @apply bg-[hsl(var(--status-info-bg))] text-[hsl(var(--status-info-foreground))];
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    @apply relative rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200;
+    border-color: hsl(var(--border));
+    background: hsl(var(--card));
+  }
+
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    border-color: hsl(var(--upload-border));
+    background: hsl(var(--upload-hover-bg));
+    box-shadow: 0 0 0 4px hsl(var(--upload-border) / 0.1);
+  }
+
+  /* Priority indicator */
+  .priority-rank {
+    @apply flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white;
+  }
+
+  .priority-1 {
+    background: linear-gradient(135deg, hsl(217 91% 55%) 0%, hsl(217 91% 45%) 100%);
+  }
+
+  .priority-2 {
+    background: linear-gradient(135deg, hsl(32 95% 55%) 0%, hsl(32 95% 45%) 100%);
+  }
+
+  .priority-3 {
+    background: linear-gradient(135deg, hsl(38 92% 55%) 0%, hsl(38 92% 45%) 100%);
+  }
+
+  /* Confidence bar */
+  .confidence-bar {
+    @apply h-1.5 w-full overflow-hidden rounded-full bg-muted;
+  }
+
+  .confidence-fill {
+    @apply h-full rounded-full transition-all duration-300;
+  }
+
+  .confidence-low {
+    @apply bg-[hsl(var(--status-error))];
+  }
+
+  .confidence-medium {
+    @apply bg-[hsl(var(--status-warning))];
+  }
+
+  .confidence-high {
+    @apply bg-[hsl(var(--status-success))];
+  }
+
+  /* Health bar */
+  .health-bar {
+    @apply h-2 w-full overflow-hidden rounded-full;
+    background: hsl(var(--muted));
+  }
+
+  .health-fill {
+    @apply h-full rounded-full transition-all duration-500;
+    background: linear-gradient(90deg, hsl(var(--status-success)) 0%, hsl(142 71% 50%) 100%);
+  }
+
+  /* Subtle border emphasis */
+  .border-l-accent {
+    @apply border-l-4;
+    border-left-color: hsl(var(--accent));
+  }
+
+  /* Nav item active state */
+  .nav-active {
+    @apply relative bg-sidebar-accent text-sidebar-accent-foreground;
+  }
+
+  .nav-active::before {
+    content: '';
+    @apply absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full;
+    background: hsl(var(--sidebar-primary));
+  }
+
+  /* Filter pill */
+  .filter-pill {
+    @apply inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer;
+  }
+
+  .filter-pill:hover {
+    @apply bg-secondary;
+  }
+
+  .filter-pill.active {
+    @apply bg-primary text-primary-foreground border-primary;
+  }
+
+  /* Panel container */
+  .panel {
+    @apply rounded-xl border bg-card p-6;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .panel-emphasis {
+    @apply rounded-xl border p-6;
+    background: linear-gradient(135deg, hsl(217 91% 98%) 0%, hsl(var(--card)) 100%);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Animated underline for links */
+  .link-underline {
+    @apply relative inline-block;
+  }
+
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-0.5 w-0 bg-current transition-all duration-200;
+  }
+
+  .link-underline:hover::after {
+    @apply w-full;
+  }
+}
+
+@layer utilities {
+  /* Subtle animations */
+  .animate-fade-up {
+    animation: fadeUp 0.4s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Stagger children animation */
+  .stagger-children > * {
+    animation: fadeUp 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+  .stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+  .stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+}

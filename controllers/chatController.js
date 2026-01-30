@@ -10,7 +10,41 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'
 });
-const History = [];
+
+// Session management
+const userSessions = new Map();
+const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Helper: Get or create session for user
+function getSession(sessionId) {
+  if (!userSessions.has(sessionId)) {
+    userSessions.set(sessionId, {
+      history: [],
+      lastActivity: Date.now()
+    });
+  }
+  return userSessions.get(sessionId);
+}
+
+// Helper: Update session activity
+function updateSessionActivity(sessionId) {
+  const session = getSession(sessionId);
+  session.lastActivity = Date.now();
+}
+
+// Helper: Clean up inactive sessions
+function cleanupInactiveSessions() {
+  const now = Date.now();
+  for (const [sessionId, session] of userSessions.entries()) {
+    if (now - session.lastActivity > SESSION_TIMEOUT) {
+      userSessions.delete(sessionId);
+      console.log(`Session ${sessionId} cleaned up due to inactivity`);
+    }
+  }
+}
+
+// Run cleanup every minute
+setInterval(cleanupInactiveSessions, 60 * 1000);
 
 // Helper: Convert 3072-dimensional vectors to 768-dimensional vectors
 function reduceDimensions(vector) {
@@ -36,8 +70,10 @@ function reduceDimensions(vector) {
     return reduced;
 }
 
-export async function transformQuery(question) {
-  History.push({
+export async function transformQuery(question, sessionId) {
+  const session = getSession(sessionId);
+  
+  session.history.push({
     role: 'user',
     content: question
   });
@@ -47,7 +83,7 @@ export async function transformQuery(question) {
       role: 'system',
       content: `You are a query rewriting expert. Based on the provided chat history, rephrase the "Follow Up user Question" into a complete, standalone question that can be understood without the chat history.\nOnly output the rewritten question and nothing else.`
     },
-    ...History
+    ...session.history
   ];
   
   const response = await openai.chat.completions.create({
@@ -55,12 +91,20 @@ export async function transformQuery(question) {
     messages: messages,
   });
   
-  History.pop();
+  session.history.pop();
+  updateSessionActivity(sessionId);
   return response.choices[0].message.content;
 }
 
-export async function chatting(question, userId = null) {
-  const queries = await transformQuery(question);
+export async function chatting(question, userId = null, sessionId = null) {
+  // Generate sessionId if not provided (use userId or random ID)
+  if (!sessionId) {
+    sessionId = userId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  const session = getSession(sessionId);
+  const queries = await transformQuery(question, sessionId);
+  
   const embeddings = new GoogleGenerativeAIEmbeddings({
     apiKey: process.env.GEMINI_API_KEY,
     model: 'gemini-embedding-001',
@@ -79,7 +123,7 @@ export async function chatting(question, userId = null) {
     .map(match => match.metadata.text)
     .join("\n\n---\n\n");
   
-  History.push({
+  session.history.push({
     role: 'user',
     content: queries
   });
@@ -89,7 +133,7 @@ export async function chatting(question, userId = null) {
       role: 'system',
       content: `You are a chatbot for JSS Academy of Technical Education. Answer student queries in a friendly and helpful manner. If the user greets, greet them and ask how you can help.\n\nIf a student asks about any notification, circular, or notice, only answer if the relevant information is present in the provided context. If the context is not sufficient, reply: "I can't help, contact the staff locally at student_help@jssaten.ac.in".\n\nAlways keep answers clear and concise. Only use the provided context to answer.\n\nContext: ${context}`
     },
-    ...History
+    ...session.history
   ];
   
   const response = await openai.chat.completions.create({
@@ -99,10 +143,12 @@ export async function chatting(question, userId = null) {
   
   const responseText = response.choices[0].message.content;
   
-  History.push({
+  session.history.push({
     role: 'assistant',
     content: responseText
   });
+
+  updateSessionActivity(sessionId);
 
   // QUERY LOGGING LOGIC: Log unanswered queries
   // Check if the response indicates lack of verified information
@@ -117,5 +163,5 @@ export async function chatting(question, userId = null) {
     }
   }
   
-  return responseText;
+  return { answer: responseText, sessionId };
 }
